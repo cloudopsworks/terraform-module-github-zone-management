@@ -1,4 +1,4 @@
-name: Terraform Zone Management Module
+name: Terraform GitHub Zone Management Module
 #logo: logo/logo.jpg
 
 license: "APACHE2"
@@ -8,7 +8,7 @@ copyrights:
     url: "https://cloudops.works"
     year: "2024"
 
-github_repo: cloudopsworks/terraform-module-zone-management
+github_repo: cloudopsworks/terraform-module-github-zone-management
 
 description: |-
   Bootstrap and manage per-zone IaC repositories for your products using a standardized
@@ -35,7 +35,7 @@ introduction: |-
 usage: |-
   Requirements
   - Terraform >= 1.3
-  - Provider: integrations/github ~> 5.30
+  - Provider: integrations/github ~> 6.0
   - Authentication: export GITHUB_TOKEN with a token that can create repositories in your org
   - Organization: set GITHUB_OWNER or configure provider "github" with an explicit owner
 
@@ -61,7 +61,7 @@ usage: |-
   }
 
   module "zone_repo" {
-    source = "git::https://github.com/cloudopsworks/terraform-module-zone-management.git//?ref=v0.1.0"
+    source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=v0.1.0"
 
     product_name = "acme"
     zone_name    = "prod"
@@ -89,18 +89,18 @@ usage: |-
 # Example usage
 examples: |-
   Boilerplate templates
-  We provide minimal Terragrunt boilerplate to get you started quickly in the `.boilerplate`
+  We provide minimal Terragrunt boilerplate to get you started quickly in the `.cloudopsworks/boilerplate`
   folder of this repository. Copy and adapt them to your project structure.
 
   1) Root Terragrunt (organization-wide defaults)
-  File: .boilerplate/terragrunt-root.hcl
+  File: .cloudopsworks/boilerplate/terragrunt-root.hcl
   ```hcl
   terragruntVersion = ">= 0.53.0"
 
   locals {
     github_owner  = get_env("GITHUB_OWNER", "your-github-org")
     module_ref    = get_env("ZONE_MGMT_MODULE_REF", "v0.1.0")
-    module_source = "git::https://github.com/cloudopsworks/terraform-module-zone-management.git//?ref=${local.module_ref}"
+    module_source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=${local.module_ref}"
   }
 
   generate "provider_github" {
@@ -115,7 +115,7 @@ examples: |-
   ```
 
   2) Per-zone Terragrunt
-  File: .boilerplate/terragrunt-zone.hcl
+  File: .cloudopsworks/boilerplate/terragrunt-zone.hcl
   ```hcl
   locals {
     root_cfg      = read_terragrunt_config(find_in_parent_folders())
@@ -139,10 +139,10 @@ examples: |-
   3) Minimal Terragrunt tree
   ```text
   live/
-  ├── terragrunt.hcl              # copy from .boilerplate/terragrunt-root.hcl
+  ├── terragrunt.hcl              # copy from .cloudopsworks/boilerplate/terragrunt-root.hcl
   └── prod/
       └── zone/
-          └── terragrunt.hcl      # copy from .boilerplate/terragrunt-zone.hcl
+          └── terragrunt.hcl      # copy from .cloudopsworks/boilerplate/terragrunt-zone.hcl
   ```
 
   4) Basic Terraform-only example (without Terragrunt)
@@ -156,8 +156,8 @@ quickstart: |-
      - export GITHUB_OWNER=your-github-org
   3) Choose your product and zone names, e.g. product_name=acme, zone_name=dev
   4) Pick one of the approaches:
-     - Terragrunt: copy `.boilerplate/terragrunt-root.hcl` to the root of your live repo,
-       then `.boilerplate/terragrunt-zone.hcl` into live/<zone>/zone/ and adjust inputs.
+     - Terragrunt: copy `.cloudopsworks/boilerplate/terragrunt-root.hcl` to the root of your live repo,
+       then `.cloudopsworks/boilerplate/terragrunt-zone.hcl` into live/<zone>/zone/ and adjust inputs.
      - Terraform only: use the module block shown in the Usage section.
   5) Initialize and apply:
      - terragrunt run-all init && terragrunt run-all apply
