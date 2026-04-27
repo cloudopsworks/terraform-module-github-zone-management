@@ -8,9 +8,11 @@
   -->
 [![README Header][readme_header_img]][readme_header_link]
 
-[![cloudopsworks][logo]](https://cloudops.works/)
+[![cloudopsworks][logo]](https://cloudopsworks.co/)
 
-# Terraform Zone Management Module
+# Terraform GitHub Zone Management Module
+
+
 
 
 Bootstrap and manage per-zone IaC repositories for your products using a standardized
@@ -24,13 +26,10 @@ starts with a ready-to-use, consistent structure.
 
 This project is part of our comprehensive approach towards DevOps Acceleration. 
 [<img align="right" title="Share via Email" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/ios-mail.svg"/>][share_email]
-[<img align="right" title="Share on Google+" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-googleplus.svg" />][share_googleplus]
 [<img align="right" title="Share on Facebook" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-facebook.svg" />][share_facebook]
 [<img align="right" title="Share on Reddit" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-reddit.svg" />][share_reddit]
 [<img align="right" title="Share on LinkedIn" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-linkedin.svg" />][share_linkedin]
-[<img align="right" title="Share on Twitter" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-twitter.svg" />][share_twitter]
-
-
+[<img align="right" title="Share on X" width="24" height="24" src="https://docs.cloudops.works/images/ionicons/logo-twitter.svg" />][share_twitter]
 
 
 It's 100% Open Source and licensed under the [APACHE2](LICENSE).
@@ -66,7 +65,7 @@ to create a private repo that you can immediately start using with Terragrunt.
 
 Requirements
 - Terraform >= 1.3
-- Provider: integrations/github ~> 5.30
+- Provider: integrations/github ~> 6.0
 - Authentication: export GITHUB_TOKEN with a token that can create repositories in your org
 - Organization: set GITHUB_OWNER or configure provider "github" with an explicit owner
 
@@ -92,7 +91,7 @@ provider "github" {
 }
 
 module "zone_repo" {
-  source = "git::https://github.com/cloudopsworks/terraform-module-zone-management.git//?ref=v0.1.0"
+  source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=v0.1.0"
 
   product_name = "acme"
   zone_name    = "prod"
@@ -125,8 +124,8 @@ Outputs
    - export GITHUB_OWNER=your-github-org
 3) Choose your product and zone names, e.g. product_name=acme, zone_name=dev
 4) Pick one of the approaches:
-   - Terragrunt: copy `.boilerplate/terragrunt-root.hcl` to the root of your live repo,
-     then `.boilerplate/terragrunt-zone.hcl` into live/<zone>/zone/ and adjust inputs.
+   - Terragrunt: copy `.cloudopsworks/boilerplate/terragrunt-root.hcl` to the root of your live repo,
+     then `.cloudopsworks/boilerplate/terragrunt-zone.hcl` into live/<zone>/zone/ and adjust inputs.
    - Terraform only: use the module block shown in the Usage section.
 5) Initialize and apply:
    - terragrunt run-all init && terragrunt run-all apply
@@ -138,18 +137,18 @@ Outputs
 ## Examples
 
 Boilerplate templates
-We provide minimal Terragrunt boilerplate to get you started quickly in the `.boilerplate`
+We provide minimal Terragrunt boilerplate to get you started quickly in the `.cloudopsworks/boilerplate`
 folder of this repository. Copy and adapt them to your project structure.
 
 1) Root Terragrunt (organization-wide defaults)
-File: .boilerplate/terragrunt-root.hcl
+File: .cloudopsworks/boilerplate/terragrunt-root.hcl
 ```hcl
 terragruntVersion = ">= 0.53.0"
 
 locals {
   github_owner  = get_env("GITHUB_OWNER", "your-github-org")
   module_ref    = get_env("ZONE_MGMT_MODULE_REF", "v0.1.0")
-  module_source = "git::https://github.com/cloudopsworks/terraform-module-zone-management.git//?ref=${local.module_ref}"
+  module_source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=${local.module_ref}"
 }
 
 generate "provider_github" {
@@ -164,7 +163,7 @@ EOF
 ```
 
 2) Per-zone Terragrunt
-File: .boilerplate/terragrunt-zone.hcl
+File: .cloudopsworks/boilerplate/terragrunt-zone.hcl
 ```hcl
 locals {
   root_cfg      = read_terragrunt_config(find_in_parent_folders())
@@ -188,10 +187,10 @@ inputs = {
 3) Minimal Terragrunt tree
 ```text
 live/
-├── terragrunt.hcl              # copy from .boilerplate/terragrunt-root.hcl
+├── terragrunt.hcl              # copy from .cloudopsworks/boilerplate/terragrunt-root.hcl
 └── prod/
     └── zone/
-        └── terragrunt.hcl      # copy from .boilerplate/terragrunt-zone.hcl
+        └── terragrunt.hcl      # copy from .cloudopsworks/boilerplate/terragrunt-zone.hcl
 ```
 
 4) Basic Terraform-only example (without Terragrunt)
@@ -206,21 +205,23 @@ Available targets:
   help                                Help screen
   help/all                            Display help for all targets
   help/short                          This help short screen
-  lint                                Lint terraform code
+  init/%                              Initialize the project for a specific cloud provider: %S
+  lint                                Lint terraform/opentofu code
+  tag                                 Tag the current version
 
 ```
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3 |
-| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 5.30 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_github"></a> [github](#provider\_github) | 5.45.0 |
+| <a name="provider_github"></a> [github](#provider\_github) | 6.12.0 |
 
 ## Modules
 
@@ -257,12 +258,11 @@ No modules.
 
 **Got a question?** We got answers. 
 
-File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-zone-management/issues), send us an [email][email] or join our [Slack Community][slack].
+File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-github-zone-management/issues), send us an [email][email] or join our [Slack Community][slack].
 
-[![README Commercial Support][readme_commercial_support_img]][readme_commercial_support_link]
 
 ## DevOps Tools
-
+[]()
 ## Slack Community
 
 
@@ -274,7 +274,7 @@ File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-zone-man
 
 ### Bug Reports & Feature Requests
 
-Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module-zone-management/issues) to report any bugs or file feature requests.
+Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module-github-zone-management/issues) to report any bugs or file feature requests.
 
 ### Developing
 
@@ -283,7 +283,7 @@ Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module
 
 ## Copyrights
 
-Copyright © 2024-2025 [Cloud Ops Works LLC](https://cloudops.works)
+Copyright © 2024-2026 [Cloud Ops Works LLC](https://cloudops.works)
 
 
 
@@ -340,32 +340,31 @@ This project is maintained by [Cloud Ops Works LLC][website].
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]
 
-  [logo]: https://cloudops.works/logo-300x69.svg
-  [docs]: https://cowk.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=docs
-  [website]: https://cowk.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=website
-  [github]: https://cowk.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=github
-  [jobs]: https://cowk.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=jobs
-  [hire]: https://cowk.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=hire
-  [slack]: https://cowk.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=slack
-  [linkedin]: https://cowk.io/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=linkedin
-  [twitter]: https://cowk.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=twitter
-  [testimonial]: https://cowk.io/leave-testimonial?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=testimonial
-  [office_hours]: https://cloudops.works/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=office_hours
-  [newsletter]: https://cowk.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=newsletter
-  [email]: https://cowk.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=email
-  [commercial_support]: https://cowk.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=commercial_support
-  [we_love_open_source]: https://cowk.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=we_love_open_source
-  [terraform_modules]: https://cowk.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=terraform_modules
-  [readme_header_img]: https://cloudops.works/readme/header/img
-  [readme_header_link]: https://cloudops.works/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=readme_header_link
-  [readme_footer_img]: https://cloudops.works/readme/footer/img
-  [readme_footer_link]: https://cloudops.works/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=readme_footer_link
-  [readme_commercial_support_img]: https://cloudops.works/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudops.works/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-zone-management&utm_content=readme_commercial_support_link
-  [share_twitter]: https://twitter.com/intent/tweet/?text=Terraform+Zone+Management+Module&url=https://github.com/cloudopsworks/terraform-module-zone-management
-  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=Terraform+Zone+Management+Module&url=https://github.com/cloudopsworks/terraform-module-zone-management
-  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-zone-management
-  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-zone-management
-  [share_googleplus]: https://plus.google.com/share?url=https://github.com/cloudopsworks/terraform-module-zone-management
-  [share_email]: mailto:?subject=Terraform+Zone+Management+Module&body=https://github.com/cloudopsworks/terraform-module-zone-management
-  [beacon]: https://ga-beacon.cloudops.works/G-7XWMFVFXZT/cloudopsworks/terraform-module-zone-management?pixel&cs=github&cm=readme&an=terraform-module-zone-management
+  [logo]: https://cloudopsworks.co/images/main-logo.png
+  [docs]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=docs
+  [website]: https://cloudopsworks.co?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=website
+  [github]: https://cloudopsworks.co/github?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=github
+  [jobs]: https://cloudopsworks.co/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=jobs
+  [hire]: https://cloudopsworks.co/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=hire
+  [slack]: https://cloudopsworks.co/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=slack
+  [linkedin]: https://cloudopsworks.co/linkedin?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=linkedin
+  [x]: https://cloudopsworks.co/x?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=x
+  [testimonial]: https://cloudopsworks.co/case-studies?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=testimonial
+  [office_hours]: https://cloudopsworks.co/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=office_hours
+  [newsletter]: https://cloudopsworks.co/resources?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=newsletter
+  [email]: https://cloudopsworks.co/contact?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=email
+  [commercial_support]: https://cloudopsworks.co/services?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=commercial_support
+  [we_love_open_source]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=we_love_open_source
+  [terraform_modules]: https://cloudopsworks.co/open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=terraform_modules
+  [readme_header_img]: https://cloudopsworks.co/images/readme-header.png
+  [readme_header_link]: https://cloudopsworks.co/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=readme_header_link
+  [readme_footer_img]: https://cloudopsworks.co/images/main-logo-footer.png
+  [readme_footer_link]: https://cloudopsworks.co/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=readme_footer_link
+  [readme_commercial_support_img]: https://cloudopsworks.co/readme/commercial-support/img
+  [readme_commercial_support_link]: https://cloudopsworks.co/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudopsworks/terraform-module-github-zone-management&utm_content=readme_commercial_support_link
+  [share_twitter]: https://x.com/intent/tweet/?text=Terraform+GitHub+Zone+Management+Module&url=https://github.com/cloudopsworks/terraform-module-github-zone-management
+  [share_linkedin]: https://www.linkedin.com/shareArticle?mini=true&title=Terraform+GitHub+Zone+Management+Module&url=https://github.com/cloudopsworks/terraform-module-github-zone-management
+  [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-github-zone-management
+  [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-github-zone-management
+  [share_email]: mailto:?subject=Terraform+GitHub+Zone+Management+Module&body=https://github.com/cloudopsworks/terraform-module-github-zone-management
+  [beacon]: https://ga-beacon.cloudospworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-github-zone-management?pixel&cs=github&cm=readme&an=terraform-module-github-zone-management

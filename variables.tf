@@ -22,6 +22,6 @@ variable "product_name" {
 }
 
 variable "description" {
-  type = string
+  type    = string
   default = ""
 }

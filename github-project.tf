@@ -6,11 +6,11 @@
 resource "github_repository" "repo" {
   name        = "${var.product_name}-iac-zone-${var.zone_name}"
   description = var.description
-  visibility = "private"
+  visibility  = "private"
 
   template {
-    owner      = "cloudopsworks"
-    repository = "terragrunt-project-template"
+    owner                = "cloudopsworks"
+    repository           = "terragrunt-project-template"
     include_all_branches = false
   }
 }
