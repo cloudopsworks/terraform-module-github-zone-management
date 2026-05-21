@@ -12,13 +12,13 @@
 
 # Terraform GitHub Zone Management Module
 
-
+ [![Latest Release](https://img.shields.io/github/release/cloudopsworks/terraform-module-github-zone-management.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-github-zone-management/releases/latest) [![Last Updated](https://img.shields.io/github/last-commit/cloudopsworks/terraform-module-github-zone-management.svg?style=for-the-badge)](https://github.com/cloudopsworks/terraform-module-github-zone-management/commits)
 
 
 Bootstrap and manage per-zone IaC repositories for your products using a standardized
 Terragrunt project template. This module creates a GitHub repository named
-"${product_name}-iac-zone-${zone_name}" based on the
-cloudopsworks/terragrunt-project-template, so every environment (dev, stage, prod, etc.)
+`<product_name>-iac-zone-<zone_name>` based on the
+cloudopsworks/terragrunt-project-template, so every environment zone (dev, stage, prod, etc.)
 starts with a ready-to-use, consistent structure.
 
 
@@ -53,148 +53,190 @@ layout, CI defaults, and guardrails.
 
 This module standardizes that bootstrap step by creating a new GitHub repository from
 the Cloud Ops Works Terragrunt project template. It encodes a consistent naming
-convention — "${product_name}-iac-zone-${zone_name}" — and exposes a minimal set of
+convention — `<product_name>-iac-zone-<zone_name>` — and exposes a minimal set of
 inputs to keep things simple and repeatable.
 
-Under the hood it uses the official GitHub Terraform provider and the template repository
-to create a private repo that you can immediately start using with Terragrunt.
+Under the hood it uses the official GitHub Terraform provider (integrations/github ~> 6.0)
+and the cloudopsworks/terragrunt-project-template repository to create a private repo that
+you can immediately start using with Terragrunt.
 
 ## Usage
 
 
 
-Requirements
-- Terraform >= 1.3
-- Provider: integrations/github ~> 6.0
-- Authentication: export GITHUB_TOKEN with a token that can create repositories in your org
-- Organization: set GITHUB_OWNER or configure provider "github" with an explicit owner
+## Prerequisites
 
-Provider configuration (one option)
-You can let the provider read the token from the environment and specify the owner via
-a generated provider block (Terragrunt) or plain Terraform provider configuration.
+- Terraform >= 1.7 / OpenTofu >= 1.7
+- GitHub Terraform provider: `integrations/github ~> 6.0`
+- A GitHub token with repository creation rights: `export GITHUB_TOKEN=<token>`
+- Set `GITHUB_OWNER` to your organization: `export GITHUB_OWNER=your-github-org`
+- [Terragrunt](https://terragrunt.gruntwork.io) >= 0.53.0
 
-Example Terraform usage
+## Terragrunt Scaffold (recommended)
+
+Use Terragrunt's built-in scaffold command to bootstrap a new deployment directory
+with pre-populated `terragrunt.hcl`, `inputs.yaml`, and `local-tags.json`:
+
+```sh
+# 1. Create and enter the target deployment directory
+mkdir -p <environment>/<region>/<spoke>/github-zone
+cd <environment>/<region>/<spoke>/github-zone
+
+# 2. Scaffold the module (sources .boilerplate/boilerplate.yml from the module repo)
+terragrunt scaffold github.com/cloudopsworks/terraform-module-github-zone-management
+
+# 3. Edit inputs.yaml with deployment-specific values
+vi inputs.yaml
+
+# 4. Apply
+terragrunt apply
+```
+
+### Generated `inputs.yaml`
+
+```yaml
+# Module configuration for GitHub Zone Management
+
+# zone_name: "prod" # (Required) Zone/environment identifier used in the repo name.
+#   Examples: dev, stage, prod, shared, sandbox
+zone_name: "prod"
+
+# product_name: "acme" # (Required) Short product or platform identifier used in the repo name.
+#   The created repository will be named: <product_name>-iac-zone-<zone_name>
+product_name: "acme"
+
+# description: "" # (Optional) Human-readable description for the GitHub repository. Default: ""
+description: "Acme Production IaC Zone"
+```
+
+### Generated `terragrunt.hcl` (produced by scaffold)
+
 ```hcl
+locals {
+  local_vars  = yamldecode(file("./inputs.yaml"))
+  spoke_vars  = yamldecode(file(find_in_parent_folders("spoke-inputs.yaml")))
+  region_vars = yamldecode(file(find_in_parent_folders("region-inputs.yaml")))
+  env_vars    = yamldecode(file(find_in_parent_folders("env-inputs.yaml")))
+  global_vars = yamldecode(file(find_in_parent_folders("global-inputs.yaml")))
+
+  local_tags  = jsondecode(file("./local-tags.json"))
+  spoke_tags  = jsondecode(file(find_in_parent_folders("spoke-tags.json")))
+  region_tags = jsondecode(file(find_in_parent_folders("region-tags.json")))
+  env_tags    = jsondecode(file(find_in_parent_folders("env-tags.json")))
+  global_tags = jsondecode(file(find_in_parent_folders("global-tags.json")))
+
+  tags = merge(
+    local.global_tags,
+    local.env_tags,
+    local.region_tags,
+    local.spoke_tags,
+    local.local_tags
+  )
+}
+
+include "root" {
+  path = find_in_parent_folders("root.hcl")
+}
+
 terraform {
-  required_version = ">= 1.3"
-  required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "~> 5.30"
-    }
-  }
+  source = "github.com/cloudopsworks/terraform-module-github-zone-management"
 }
 
-provider "github" {
-  # Alternatively, set env var GITHUB_OWNER
-  owner = "your-github-org"
-}
-
-module "zone_repo" {
-  source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=v0.1.0"
-
-  product_name = "acme"
-  zone_name    = "prod"
-  description  = "Acme Production IaC Zone"
-
-  # Optional
-  tags       = { team = "platform" }
-  extra_tags = { env = "prod" }
+inputs = {
+  is_hub       = false
+  org          = local.env_vars.org
+  spoke_def    = local.spoke_vars.spoke
+  zone_name    = local.local_vars.zone_name
+  product_name = local.local_vars.product_name
+  description  = try(local.local_vars.description, "")
+  extra_tags   = local.tags
 }
 ```
 
-Complete Inputs Reference
-- product_name (string, required): Short product/platform identifier used in the repo name.
-- zone_name (string, required): Zone/environment name (e.g., dev, stage, prod, shared).
-- description (string, optional, default ""): Repository description in GitHub.
-- tags (map(string), optional, default {}): Generic tags map. Reserved for future use.
-- extra_tags (map(string), optional, default {}): Additional tags map. Reserved for future use.
+## Inputs Reference
 
-Outputs
-- full_name: The "owner/name" of the created repository.
-- git_clone_url: The git:// clone URL.
-- http_clone_url: The https:// clone URL.
-- html_url: The repository HTML URL.
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `zone_name` | `string` | yes | — | Zone/environment identifier (e.g. dev, stage, prod) |
+| `product_name` | `string` | yes | — | Short product identifier used in the repo name |
+| `description` | `string` | no | `""` | GitHub repository description |
+| `org` | `object` | yes | — | Organization details (injected by Terragrunt hierarchy) |
+| `is_hub` | `bool` | no | `false` | Hub/spoke configuration flag |
+| `spoke_def` | `string` | no | `"001"` | Spoke ID number (3 digits) |
+| `extra_tags` | `map(string)` | no | `{}` | Additional tags merged from Terragrunt tag files |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| `full_name` | The `owner/name` of the created repository |
+| `git_clone_url` | The `git://` clone URL |
+| `http_clone_url` | The `https://` clone URL |
+| `html_url` | The repository HTML URL |
 
 ## Quick Start
 
-1) Ensure you have a GitHub token with repo creation rights and export it:
-   - export GITHUB_TOKEN=...  (or configure a GitHub App auth as per provider docs)
-2) Set your organization owner so repos are created in the right place:
-   - export GITHUB_OWNER=your-github-org
-3) Choose your product and zone names, e.g. product_name=acme, zone_name=dev
-4) Pick one of the approaches:
-   - Terragrunt: copy `.cloudopsworks/boilerplate/terragrunt-root.hcl` to the root of your live repo,
-     then `.cloudopsworks/boilerplate/terragrunt-zone.hcl` into live/<zone>/zone/ and adjust inputs.
-   - Terraform only: use the module block shown in the Usage section.
-5) Initialize and apply:
-   - terragrunt run-all init && terragrunt run-all apply
-     or
-   - terraform init && terraform apply
-6) Verify outputs and visit the created repository URL.
+1. Export your GitHub credentials:
+   ```sh
+   export GITHUB_TOKEN=<your-token>
+   export GITHUB_OWNER=<your-github-org>
+   ```
+2. Create and enter a deployment directory:
+   ```sh
+   mkdir -p live/prod/us-east-1/spoke-001/github-zone
+   cd live/prod/us-east-1/spoke-001/github-zone
+   ```
+3. Scaffold the module:
+   ```sh
+   terragrunt scaffold github.com/cloudopsworks/terraform-module-github-zone-management
+   ```
+4. Edit `inputs.yaml` — set `zone_name`, `product_name`, and optionally `description`.
+5. Initialize and apply:
+   ```sh
+   terragrunt init
+   terragrunt apply
+   ```
+6. Verify the output `html_url` and visit the created repository.
 
 
 ## Examples
 
-Boilerplate templates
-We provide minimal Terragrunt boilerplate to get you started quickly in the `.cloudopsworks/boilerplate`
-folder of this repository. Copy and adapt them to your project structure.
+## Directory Layout
 
-1) Root Terragrunt (organization-wide defaults)
-File: .cloudopsworks/boilerplate/terragrunt-root.hcl
-```hcl
-terragruntVersion = ">= 0.53.0"
+A typical Terragrunt live-infra tree for multiple zones:
 
-locals {
-  github_owner  = get_env("GITHUB_OWNER", "your-github-org")
-  module_ref    = get_env("ZONE_MGMT_MODULE_REF", "v0.1.0")
-  module_source = "git::https://github.com/cloudopsworks/terraform-module-github-zone-management.git//?ref=${local.module_ref}"
-}
-
-generate "provider_github" {
-  path      = "provider.github.tf"
-  if_exists = "overwrite_terragrunt"
-  contents  = <<EOF
-provider "github" {
-  owner = "${local.github_owner}"
-}
-EOF
-}
-```
-
-2) Per-zone Terragrunt
-File: .cloudopsworks/boilerplate/terragrunt-zone.hcl
-```hcl
-locals {
-  root_cfg      = read_terragrunt_config(find_in_parent_folders())
-  module_source = local.root_cfg.locals.module_source
-}
-
-terraform {
-  source = local.module_source
-}
-
-inputs = {
-  product_name = "acme"
-  zone_name    = "prod"
-  description  = "Acme Production IaC Zone"
-
-  tags       = { team = "platform" }
-  extra_tags = { env = "prod" }
-}
-```
-
-3) Minimal Terragrunt tree
 ```text
 live/
-├── terragrunt.hcl              # copy from .cloudopsworks/boilerplate/terragrunt-root.hcl
-└── prod/
-    └── zone/
-        └── terragrunt.hcl      # copy from .cloudopsworks/boilerplate/terragrunt-zone.hcl
+├── root.hcl                        # root Terragrunt config (provider, backend)
+├── global-inputs.yaml
+├── prod/
+│   ├── env-inputs.yaml
+│   ├── us-east-1/
+│   │   ├── region-inputs.yaml
+│   │   └── spoke-001/
+│   │       ├── spoke-inputs.yaml
+│   │       └── github-zone/        # ← scaffolded directory
+│   │           ├── terragrunt.hcl  # generated by scaffold
+│   │           ├── inputs.yaml     # deployment-specific values
+│   │           └── local-tags.json # local tag overrides
 ```
 
-4) Basic Terraform-only example (without Terragrunt)
-See the "Example Terraform usage" in the Usage section above.
+## Scaffold and Apply
+
+```sh
+mkdir -p live/prod/us-east-1/spoke-001/github-zone
+cd live/prod/us-east-1/spoke-001/github-zone
+
+terragrunt scaffold github.com/cloudopsworks/terraform-module-github-zone-management
+
+# Edit inputs.yaml
+vi inputs.yaml
+
+terragrunt apply
+```
+
+After apply, the output `full_name` will be `your-org/acme-iac-zone-prod` (or whatever
+`product_name` and `zone_name` you set).
 
 
 
@@ -237,20 +279,22 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `""` | no |
-| <a name="input_extra_tags"></a> [extra\_tags](#input\_extra\_tags) | # (c) 2024 - Cloud Ops Works LLC - https://cloudops.works/ On GitHub: https://github.com/cloudopsworks Distributed Under Apache v2.0 License | `map(string)` | `{}` | no |
-| <a name="input_product_name"></a> [product\_name](#input\_product\_name) | n/a | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(string)` | `{}` | no |
-| <a name="input_zone_name"></a> [zone\_name](#input\_zone\_name) | n/a | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | Human-readable description for the GitHub repository. | `string` | `""` | no |
+| <a name="input_extra_tags"></a> [extra\_tags](#input\_extra\_tags) | Extra tags to add to the resources | `map(string)` | `{}` | no |
+| <a name="input_is_hub"></a> [is\_hub](#input\_is\_hub) | Is this a hub or spoke configuration? | `bool` | `false` | no |
+| <a name="input_org"></a> [org](#input\_org) | Organization details | <pre>object({<br/>    organization_name = string<br/>    organization_unit = string<br/>    environment_type  = string<br/>    environment_name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_product_name"></a> [product\_name](#input\_product\_name) | Short product or platform identifier used in the repository name. | `string` | n/a | yes |
+| <a name="input_spoke_def"></a> [spoke\_def](#input\_spoke\_def) | Spoke ID Number, must be a 3 digit number | `string` | `"001"` | no |
+| <a name="input_zone_name"></a> [zone\_name](#input\_zone\_name) | Zone or environment identifier used in the repository name (e.g. dev, stage, prod, shared). | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_full_name"></a> [full\_name](#output\_full\_name) | n/a |
-| <a name="output_git_clone_url"></a> [git\_clone\_url](#output\_git\_clone\_url) | n/a |
-| <a name="output_html_url"></a> [html\_url](#output\_html\_url) | n/a |
-| <a name="output_http_clone_url"></a> [http\_clone\_url](#output\_http\_clone\_url) | n/a |
+| <a name="output_full_name"></a> [full\_name](#output\_full\_name) | The owner/name of the created GitHub repository. |
+| <a name="output_git_clone_url"></a> [git\_clone\_url](#output\_git\_clone\_url) | The git:// clone URL of the created GitHub repository. |
+| <a name="output_html_url"></a> [html\_url](#output\_html\_url) | The HTML URL of the created GitHub repository. |
+| <a name="output_http_clone_url"></a> [http\_clone\_url](#output\_http\_clone\_url) | The https:// clone URL of the created GitHub repository. |
 
 
 
