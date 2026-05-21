@@ -1,10 +1,14 @@
 ##
-# (c) 2024 - Cloud Ops Works LLC - https://cloudops.works/
-#            On GitHub: https://github.com/cloudopsworks
-#            Distributed Under Apache v2.0 License
+# (c) 2021-2026
+#     Cloud Ops Works LLC - https://cloudops.works/
+#     Find us on:
+#       GitHub: https://github.com/cloudopsworks
+#       WebSite: https://cloudops.works
+#     Distributed Under Apache v2.0 License
 #
+
 resource "github_repository" "repo" {
-  name        = "${var.product_name}-iac-zone-${var.zone_name}"
+  name        = local.repo_name
   description = var.description
   visibility  = "private"
 
