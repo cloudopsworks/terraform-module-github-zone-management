@@ -45,12 +45,18 @@ inputs = {
   spoke_def  = local.spoke_vars.spoke
   {{- range .requiredVariables }}
   {{- if ne .Name "org" }}
-  {{ .Name }} = local.local_vars.{{ .Name }}
+  {{- if eq .Name "zone_name" }}
+  zone_name = try(local.local_vars.zone.name, local.local_vars.zone_name)
+  {{- else if eq .Name "product_name" }}
+  product_name = try(local.local_vars.zone.product, local.local_vars.product_name)
+  {{- else }}
+  {{ .Name }} = try(local.local_vars.{{ .Name }}, "")
+  {{- end }}
   {{- end }}
   {{- end }}
   {{- range .optionalVariables }}
   {{- if not (eq .Name "extra_tags" "is_hub" "spoke_def" "org") }}
-  {{ .Name }} = try(local.local_vars.{{ replace .Name '_' '.' }}, {{ .DefaultValue }})
+  {{ .Name }} = try(local.local_vars.{{ .Name }}, {{ .DefaultValue }})
   {{- end }}
   {{- end }}
   extra_tags = local.tags
