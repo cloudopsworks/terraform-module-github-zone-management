@@ -79,13 +79,14 @@ usage: |-
   github:
     org: "my-github-org"
 
-  # zone_name: "prod" # (Required) Zone/environment identifier used in the repo name.
-  #   Examples: dev, stage, prod, shared, sandbox
-  zone_name: "prod"
-
-  # product_name: "acme" # (Required) Short product or platform identifier used in the repo name.
-  #   The created repository will be named: <product_name>-iac-zone-<zone_name>
-  product_name: "acme"
+  # zone: # (Required) Zone and product configuration
+  #   name: "prod"    # (Required) Zone/environment identifier used in the repo name.
+  #                   #   Examples: dev, stage, prod, shared, sandbox
+  #   product: "acme" # (Required) Short product or platform identifier used in the repo name.
+  #                   #   The created repository will be named: <product>-iac-zone-<name>
+  zone:
+    name: "prod"
+    product: "acme"
 
   # description: "" # (Optional) Human-readable description for the GitHub repository. Default: ""
   description: "Acme Production IaC Zone"
@@ -139,8 +140,8 @@ usage: |-
     is_hub       = false
     org          = local.env_vars.org
     spoke_def    = local.spoke_vars.spoke
-    zone_name    = local.local_vars.zone_name
-    product_name = local.local_vars.product_name
+    zone_name    = try(local.local_vars.zone.name, local.local_vars.zone_name)
+    product_name = try(local.local_vars.zone.product, local.local_vars.product_name)
     description  = try(local.local_vars.description, "")
     extra_tags   = local.tags
   }
@@ -151,8 +152,8 @@ usage: |-
   | Name | Type | Required | Default | Description |
   |------|------|----------|---------|-------------|
   | `github.org` | `string` | yes | — | GitHub organization name or user owning the repositories (sets provider `owner`) |
-  | `zone_name` | `string` | yes | — | Zone/environment identifier (e.g. dev, stage, prod) |
-  | `product_name` | `string` | yes | — | Short product identifier used in the repo name |
+  | `zone.name` | `string` | yes | — | Zone/environment identifier (e.g. dev, stage, prod) |
+  | `zone.product` | `string` | yes | — | Short product identifier used in the repo name |
   | `description` | `string` | no | `""` | GitHub repository description |
   | `org` | `object` | yes | — | Organization details (injected by Terragrunt hierarchy) |
   | `is_hub` | `bool` | no | `false` | Hub/spoke configuration flag |
@@ -205,7 +206,7 @@ examples: |-
   ```
 
   After apply, the output `full_name` will be `your-org/acme-iac-zone-prod` (or whatever
-  `product_name` and `zone_name` you set).
+  `zone.product` and `zone.name` you set).
 
 # How to get started quickly
 quickstart: |-
@@ -222,7 +223,7 @@ quickstart: |-
      ```sh
      terragrunt scaffold github.com/cloudopsworks/terraform-module-github-zone-management
      ```
-  4. Edit `inputs.yaml` — set `github.org`, `zone_name`, `product_name`, and optionally `description`.
+  4. Edit `inputs.yaml` — set `github.org`, `zone.name`, `zone.product`, and optionally `description`.
   5. Initialize and apply:
      ```sh
      terragrunt init

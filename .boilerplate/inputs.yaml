@@ -6,13 +6,14 @@
 github:
   org: ""
 
-# zone_name: "prod" # (Required) Zone/environment identifier used in the repo name.
-#   Examples: dev, stage, prod, shared, sandbox
-zone_name: ""
-
-# product_name: "acme" # (Required) Short product or platform identifier used in the repo name.
-#   The created repository will be named: <product_name>-iac-zone-<zone_name>
-product_name: ""
+# zone: # (Required) Zone and product configuration
+#   name: "prod"    # (Required) Zone/environment identifier used in the repo name.
+#                   #   Examples: dev, stage, prod, shared, sandbox
+#   product: "acme" # (Required) Short product or platform identifier used in the repo name.
+#                   #   The created repository will be named: <product>-iac-zone-<name>
+zone:
+  name: ""
+  product: ""
 
 # description: "" # (Optional) Human-readable description for the GitHub repository. Default: ""
 description: ""
