@@ -69,7 +69,6 @@ you can immediately start using with Terragrunt.
 - Terraform >= 1.7 / OpenTofu >= 1.7
 - GitHub Terraform provider: `integrations/github ~> 6.0`
 - A GitHub token with repository creation rights: `export GITHUB_TOKEN=<token>`
-- Set `GITHUB_OWNER` to your organization: `export GITHUB_OWNER=your-github-org`
 - [Terragrunt](https://terragrunt.gruntwork.io) >= 0.53.0
 
 ## Terragrunt Scaffold (recommended)
@@ -96,6 +95,11 @@ terragrunt apply
 
 ```yaml
 # Module configuration for GitHub Zone Management
+
+# github: # (Required) GitHub organization configuration
+#   org: "my-github-org" # (Required) GitHub organization name or user owning the repositories.
+github:
+  org: "my-github-org"
 
 # zone_name: "prod" # (Required) Zone/environment identifier used in the repo name.
 #   Examples: dev, stage, prod, shared, sandbox
@@ -138,6 +142,17 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+# generate github provider block
+generate "provider_github" {
+  path      = "provider.l.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "github" {
+  owner = "${local.local_vars.github.org}"
+}
+EOF
+}
+
 terraform {
   source = "github.com/cloudopsworks/terraform-module-github-zone-management"
 }
@@ -157,6 +172,7 @@ inputs = {
 
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
+| `github.org` | `string` | yes | — | GitHub organization name or user owning the repositories (sets provider `owner`) |
 | `zone_name` | `string` | yes | — | Zone/environment identifier (e.g. dev, stage, prod) |
 | `product_name` | `string` | yes | — | Short product identifier used in the repo name |
 | `description` | `string` | no | `""` | GitHub repository description |
@@ -176,10 +192,9 @@ inputs = {
 
 ## Quick Start
 
-1. Export your GitHub credentials:
+1. Export your GitHub token:
    ```sh
    export GITHUB_TOKEN=<your-token>
-   export GITHUB_OWNER=<your-github-org>
    ```
 2. Create and enter a deployment directory:
    ```sh
@@ -190,7 +205,7 @@ inputs = {
    ```sh
    terragrunt scaffold github.com/cloudopsworks/terraform-module-github-zone-management
    ```
-4. Edit `inputs.yaml` — set `zone_name`, `product_name`, and optionally `description`.
+4. Edit `inputs.yaml` — set `github.org`, `zone_name`, `product_name`, and optionally `description`.
 5. Initialize and apply:
    ```sh
    terragrunt init
@@ -306,21 +321,19 @@ File a GitHub [issue](https://github.com/cloudopsworks/terraform-module-github-z
 
 
 ## DevOps Tools
-[]()
+[Our Products](https://cloudopsworks.co/products/)
+[CI/CD Blueprint](https://cloudopsworks.co/cicd-blueprint/)
+[Open Source](https://cloudopsworks.co/open-source/)
+
 ## Slack Community
 
 
 ## Newsletter
-
-## Office Hours
-
-## Contributing
+[Resources Directory](https://cloudopsworks.co/resources/)
 
 ### Bug Reports & Feature Requests
 
 Please use the [issue tracker](https://github.com/cloudopsworks/terraform-module-github-zone-management/issues) to report any bugs or file feature requests.
-
-### Developing
 
 
 
@@ -411,4 +424,4 @@ This project is maintained by [Cloud Ops Works LLC][website].
   [share_reddit]: https://reddit.com/submit/?url=https://github.com/cloudopsworks/terraform-module-github-zone-management
   [share_facebook]: https://facebook.com/sharer/sharer.php?u=https://github.com/cloudopsworks/terraform-module-github-zone-management
   [share_email]: mailto:?subject=Terraform+GitHub+Zone+Management+Module&body=https://github.com/cloudopsworks/terraform-module-github-zone-management
-  [beacon]: https://ga-beacon.cloudospworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-github-zone-management?pixel&cs=github&cm=readme&an=terraform-module-github-zone-management
+  [beacon]: https://ga-beacon.cloudopsworks.co/G-QMZVYYN2VN/cloudopsworks/terraform-module-github-zone-management?pixel&cs=github&cm=readme&an=terraform-module-github-zone-management

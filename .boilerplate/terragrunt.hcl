@@ -50,7 +50,7 @@ inputs = {
   {{- end }}
   {{- range .optionalVariables }}
   {{- if not (eq .Name "extra_tags" "is_hub" "spoke_def" "org") }}
-  {{ .Name }} = try(local.local_vars.{{ .Name }}, {{ .DefaultValue }})
+  {{ .Name }} = try(local.local_vars.{{ replace .Name '_' '.' }}, {{ .DefaultValue }})
   {{- end }}
   {{- end }}
   extra_tags = local.tags
