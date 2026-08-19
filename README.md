@@ -60,6 +60,10 @@ Under the hood it uses the official GitHub Terraform provider (integrations/gith
 and the cloudopsworks/terragrunt-project-template repository to create a private repo that
 you can immediately start using with Terragrunt.
 
+The module also pulls in the shared `cloudopsworks/tags/local` module, which derives the
+standard Cloud Ops Works naming and tagging conventions from the `org` input. Those common
+tags are merged with any `extra_tags` supplied by the Terragrunt tag hierarchy.
+
 ## Usage
 
 
@@ -70,6 +74,7 @@ you can immediately start using with Terragrunt.
 - GitHub Terraform provider: `integrations/github ~> 6.0`
 - A GitHub token with repository creation rights: `export GITHUB_TOKEN=<token>`
 - [Terragrunt](https://terragrunt.gruntwork.io) >= 0.53.0
+- Network access to the Terraform Registry to fetch the `cloudopsworks/tags/local` module (~> 1.0.10)
 
 ## Terragrunt Scaffold (recommended)
 
@@ -180,7 +185,7 @@ inputs = {
 | `org` | `object` | yes | — | Organization details (injected by Terragrunt hierarchy) |
 | `is_hub` | `bool` | no | `false` | Hub/spoke configuration flag |
 | `spoke_def` | `string` | no | `"001"` | Spoke ID number (3 digits) |
-| `extra_tags` | `map(string)` | no | `{}` | Additional tags merged from Terragrunt tag files |
+| `extra_tags` | `map(string)` | no | `{}` | Additional tags merged from Terragrunt tag files, on top of the common tags derived from `org` |
 
 ## Outputs
 
@@ -283,7 +288,9 @@ Available targets:
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_tags"></a> [tags](#module\_tags) | cloudopsworks/tags/local | 1.0.10 |
 
 ## Resources
 

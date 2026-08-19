@@ -7,6 +7,10 @@
 #     Distributed Under Apache v2.0 License
 #
 
+locals {
+  repo_name = format("%s-iac-zone-%s", lower(var.product_name), lower(var.zone_name))
+}
+
 resource "github_repository" "repo" {
   name        = local.repo_name
   description = var.description
